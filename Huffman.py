@@ -1,49 +1,74 @@
 # -*- coding=utf-8 -*-
-
-class BinaryTreeNode:
-    """
-    Simple Binary Tree Node
-    """
-    def __init__(self, data=None):
-        self.data = data
-        self.left_kid = None
-        self.right_kid = None
+import numpy as np
 
 
-class SimpleBinaryTree:
-    """
-    Simple Binary Tree 
-    """
-    def __init__(self, data=None):
-        self.treeNode = BinaryTreeNode(data)
+class HuffmanTreeNode:
+    def __init__(self, value, possibility):
+        self.possibility = possibility
+        self.left = None
+        self.right = None
+        self.value = value  # the vector of word
+        self.code = '' # huffman code
 
-    def set_data(self, data):
-        self.treeNode.data = data
 
-    def set_right_kid(self, binary_tree_node):
-        assert binary_tree_node.__class__ is SimpleBinaryTree.__class__
-        self.treeNode.right_kid = binary_tree_node
+class HuffmanTree:
+    def __init__(self, word_dict, vec_len=15000):
+        self.vec_len = vec_len  # the length of each word vector
+        self.root = None
+        word_dict_list = list(word_dict.values())
+        node_list = [HuffmanTreeNode(item['word'], item['possibility']) for item in word_dict_list]
+        self.build(node_list)   # 建立哈夫曼二叉树
+        self.generate_huffman_code(self.root, word_dict)
 
-    def set_left_kid(self, binary_tree_node):
-        assert binary_tree_node.__class__ is SimpleBinaryTree.__class__
-        self.treeNode.left_kid = binary_tree_node
+    # 建立哈夫曼树
+    def build(self, node_list):
+        while node_list.__len__() > 1:
+            i1 = 0
+            i2 = 1
+            if node_list[i2].possibility < node_list[i1].possibility:
+                [i1, i2] = [i2, i1]
+            for i in range(2, len(node_list)):
+                if node_list[i].possibility < node_list[i2].possibility:
+                    i2 = i
+                    if node_list[i2].possibility < node_list[i1].possibility:
+                        [i1, i2] = [i2, i1]
+            top_node = self.merge(node_list[i1], node_list[i2])
+            if i1 < i2:
+                node_list.pop(i2)
+                node_list.pop(i1)
+            elif i1 > i2:
+                node_list.pop(i1)
+                node_list.pop(i2)
+            else:
+                raise RuntimeError('i1 should not be equal to i2')
+            node_list.insert(0, top_node)
+        self.root = node_list[0]
 
-    def front_read(self, node):
-        if node is not None and node.data is not None:
-            print(node.data)
-            self.front_read(node.left_kid)
-            self.front_read(node.right_kid)
+    # 对哈夫曼树的每个叶子结点编码
+    def generate_huffman_code(self, node, word_dict):
+        stack = [self.root]
+        while len(stack) > 0:
+            node = stack.pop()
+            # go along left tree
+            while node.left or node.right:
+                code = node.code
+                node.left.code = code + "1"
+                node.right.code = code + "0"
+                stack.append(node.right)
+                node = node.left
+            word = node.value
+            code = node.code
+            word_dict[word]['code'] = code
 
-    def mid_read(self, node):
-        if node is not None and node.data is not None:
-            self.front_read(node.left_kid)
-            print(node.data)
-            self.front_read(node.right_kid)
-
-    def behind_read(self, node):
-        if node is not None and node.data is not None:
-            self.front_read(node.left_kid)
-            self.front_read(node.right_kid)
-            print(node.data)
-
+    # 合并两个子树，返回一个合并后的树的根节点
+    def merge(self, node1, node2):
+        top_pos = node1.possibility + node2.possibility
+        top_node = HuffmanTreeNode(np.zeros([1, self.vec_len]), top_pos)
+        if node1.possibility >= node2.possibility:
+            top_node.left = node1
+            top_node.right = node2
+        else:
+            top_node.left = node2
+            top_node.right = node1
+        return top_node
 
