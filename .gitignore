@@ -103,3 +103,5 @@ ENV/
 .ropeproject
 
 .idea/
+/SogouCA/
+/news/

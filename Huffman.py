@@ -12,6 +12,7 @@ class HuffmanTreeNode:
 
 
 class HuffmanTree:
+
     def __init__(self, word_dict, vec_len=15000):
         self.vec_len = vec_len  # the length of each word vector
         self.root = None
